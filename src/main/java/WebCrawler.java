@@ -10,7 +10,7 @@ import java.util.HashSet;
 public class WebCrawler {
 
     private HashSet<String> links;
-    private int max = 5;
+    private int max = 5; // change max number of links crawled here
 
     public WebCrawler() {
         links = new HashSet<String>();
@@ -29,6 +29,7 @@ public class WebCrawler {
 
                 // 2. Fetch HTML code
                 Document document = Jsoup.connect(URL).get();
+                // System.out.println(document); // prints complete contextual page (html tags)
 
                 // 3. Parse the HTML and extract other URLs on the page
                 Elements linksOnPage = document.select("a[href]");
@@ -46,6 +47,6 @@ public class WebCrawler {
 
     public static void main(String[] args) {
         // 1. pick a seed URL
-        new WebCrawler().getPageLinks("http://www.cpp.edu");
+        new WebCrawler().getPageLinks("http://www.cpp.edu"); // change seed link here
     }
 }
