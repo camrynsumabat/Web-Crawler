@@ -1,8 +1,11 @@
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -14,6 +17,7 @@ import java.util.HashSet;
 // code adapted from https://mkyong.com/java/jsoup-basic-web-crawler-example/
 public class WebCrawler {
 
+    private static final String REPORT_CSV = ".\\report.csv";
     private static final int MAX_DEPTH = 2; // represents depth of link extraction
     private HashSet<String> links;
     private int max = 5; // change max number of links crawled here
@@ -22,7 +26,7 @@ public class WebCrawler {
         links = new HashSet<String>();
     }
 
-    public void getPageLinks(String URL, int depth) {
+    public void getPageLinks(String URL, int depth, CSVPrinter csvPrinter) {
 
         // 4. Check if the URL has already been crawled and the page limit has not been reached
         if (!links.contains(URL) && links.size() < max && depth < MAX_DEPTH) {
@@ -42,11 +46,13 @@ public class WebCrawler {
                 System.out.println("Number of outlinks: " + linksOnPage.size());
                 System.out.println("Depth: " + depth);
                 System.out.println();
+
+                csvPrinter.printRecord(URL, linksOnPage.size());
                 depth++;
 
                 // 5. For each URL, go back to step 4
                 for (Element page : linksOnPage) {
-                    getPageLinks(page.attr("abs:href"), depth);
+                    getPageLinks(page.attr("abs:href"), depth, csvPrinter);
                 }
             } catch (IOException e) {
                 System.err.println("For '" + URL + "': " + e.getMessage());
@@ -70,7 +76,19 @@ public class WebCrawler {
     }
 
     public static void main(String[] args) {
-        // 1. pick a seed URL
-        new WebCrawler().getPageLinks("http://www.cpp.edu", 0); // change seed link here
+
+        try {
+            BufferedWriter writer = Files.newBufferedWriter(Paths.get(REPORT_CSV));
+
+            CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("URL", "Outlinks"));
+
+            // 1. pick a seed URL
+            new WebCrawler().getPageLinks("http://www.cpp.edu", 0, csvPrinter); // change seed link here
+
+            csvPrinter.flush();
+        } catch (IOException e) {
+            System.err.println("Cannot write report.csv file");
+        }
+
     }
 }
