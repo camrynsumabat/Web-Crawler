@@ -3,7 +3,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.HashSet;
 
 // code adapted from https://mkyong.com/java/jsoup-basic-web-crawler-example/
@@ -28,9 +32,9 @@ public class WebCrawler {
                     System.out.println(URL);
                 }
 
-                // 2. Fetch HTML code
+                // 2. Fetch HTML code and write to file
                 Document document = Jsoup.connect(URL).get();
-                // System.out.println(document); // prints complete contextual page (html tags)
+                writeFile(document);
 
                 // 3. Parse the HTML and extract other URLs on the page
                 Elements linksOnPage = document.select("a[href]");
@@ -47,6 +51,13 @@ public class WebCrawler {
                 System.err.println("For '" + URL + "': " + e.getMessage());
             }
         }
+    }
+
+    public void writeFile(Document document) throws IOException {
+        String filename = "site" + links.size() + ".txt";
+        FileWriter fw = new FileWriter(filename);
+        fw.write(document.toString());
+        fw.close();
     }
 
     public static void main(String[] args) {
