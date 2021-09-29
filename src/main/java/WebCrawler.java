@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 
@@ -54,8 +55,16 @@ public class WebCrawler {
     }
 
     public void writeFile(Document document) throws IOException {
+        Path path = Path.of((".\\repository"));
+
+        //Check if "repository" folder has been made yet
+        if(!Files.exists(path)){
+            new File(String.valueOf(path)).mkdir();
+        }
+
+        //Adding text files to "repository"
         String filename = document.title() + ".txt";
-        FileWriter fw = new FileWriter(filename);
+        FileWriter fw = new FileWriter("repository\\" + filename);
         fw.write(document.text());
         fw.close();
     }
