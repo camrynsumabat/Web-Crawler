@@ -54,7 +54,7 @@ public class WebCrawler {
     }
 
     public void writeFile(Document document) throws IOException {
-        String filename = "site" + links.size() + ".txt";
+        String filename = document.title() + ".txt";
         FileWriter fw = new FileWriter(filename);
         fw.write(document.toString());
         fw.close();
