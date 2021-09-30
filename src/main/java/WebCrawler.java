@@ -17,10 +17,13 @@ import java.util.HashSet;
 // code adapted from https://mkyong.com/java/jsoup-basic-web-crawler-example/
 public class WebCrawler {
 
+    private static final String SEED_SITE = "http://www.cpp.edu";
+    private static final String LANGUAGE = "en";
     private static final String REPORT_CSV = ".\\report.csv";
-    private static final int MAX_DEPTH = 2; // represents depth of link extraction
+    private static final String REPOSITORY_FOLDER = ".\\repository";
+    private static final int MAX_SITES = 5;
+    private static final int MAX_DEPTH = 2;
     private HashSet<String> links;
-    private int max = 5; // change max number of links crawled here
 
     public WebCrawler() {
         links = new HashSet<String>();
@@ -29,7 +32,7 @@ public class WebCrawler {
     public void getPageLinks(String URL, int depth, CSVPrinter csvPrinter) {
 
         // 4. Check if the URL has already been crawled and the page limit has not been reached
-        if (!links.contains(URL) && links.size() < max && depth < MAX_DEPTH) {
+        if (!links.contains(URL) && links.size() < MAX_SITES && depth < MAX_DEPTH) {
             try {
 
                 // 4a. If the URL has not been crawled yet, add it to the HashSet of links
@@ -37,12 +40,13 @@ public class WebCrawler {
                     System.out.println(URL);
                 }
 
-                // 2. Fetch HTML code and write to file
-                Document document = Jsoup.connect(URL).get();
+                // 2. Fetch HTML code, check language, and write to file
+                Document document = Jsoup.connect(URL).header("Accept-Language", LANGUAGE).get();
                 writeFile(document);
 
-                // 3. Parse the HTML and extract other URLs on the page
+                // 3. Parse the HTML and extract other URLs on the page, then print URL and outlink count to csv
                 Elements linksOnPage = document.select("a[href]");
+
                 System.out.println("Number of outlinks: " + linksOnPage.size());
                 System.out.println("Depth: " + depth);
                 System.out.println();
@@ -61,16 +65,8 @@ public class WebCrawler {
     }
 
     public void writeFile(Document document) throws IOException {
-        Path path = Path.of((".\\repository"));
-
-        //Check if "repository" folder has been made yet
-        if(!Files.exists(path)){
-            new File(String.valueOf(path)).mkdir();
-        }
-
-        //Adding text files to "repository"
         String filename = document.title() + ".txt";
-        FileWriter fw = new FileWriter("repository\\" + filename);
+        FileWriter fw = new FileWriter(REPOSITORY_FOLDER + "\\" + filename);
         fw.write(document.text());
         fw.close();
     }
@@ -78,12 +74,16 @@ public class WebCrawler {
     public static void main(String[] args) {
 
         try {
+            Path path = Path.of((REPOSITORY_FOLDER));
+
+            new File(String.valueOf(path)).mkdir();     // creates repository folder if it doesn't exist
+
             BufferedWriter writer = Files.newBufferedWriter(Paths.get(REPORT_CSV));
 
             CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("URL", "Outlinks"));
 
             // 1. pick a seed URL
-            new WebCrawler().getPageLinks("http://www.cpp.edu", 0, csvPrinter); // change seed link here
+            new WebCrawler().getPageLinks(SEED_SITE, 0, csvPrinter);
 
             csvPrinter.flush();
         } catch (IOException e) {
