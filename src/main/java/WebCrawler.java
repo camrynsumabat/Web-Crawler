@@ -14,11 +14,20 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 
-// code adapted from https://mkyong.com/java/jsoup-basic-web-crawler-example/
 public class WebCrawler {
 
-    private static final String SEED_SITE = "http://www.cpp.edu";
+    // english test seed
+    private static final String SEED_SITE = "https://www.cpp.edu";
     private static final String LANGUAGE = "en";
+
+    // spanish test seed (need a better one, only 4 crawlable outlinks)
+    // private static final String SEED_SITE = "https://www.latimes.com/espanol/eeuu/articulo/2021-09-29/opinion-mexico-es-un-campamento-patio-o-sala-de-espera-de-estados-unidos";
+    // private static final String LANGUAGE = "es-US";
+
+    // one more language
+    // private static final String SEED_SITE = "";
+    // private static final String LANGUAGE = "";
+
     private static final String REPORT_CSV = ".\\report.csv";
     private static final String REPOSITORY_FOLDER = ".\\repository";
     private static final int MAX_SITES = 5;
@@ -31,32 +40,54 @@ public class WebCrawler {
 
     public void getPageLinks(String URL, int depth, CSVPrinter csvPrinter) {
 
-        // 4. Check if the URL has already been crawled and the page limit has not been reached
+        // 2. Check that the URL has not been crawled yet and the page limit and depth has not been reached
         if (!links.contains(URL) && links.size() < MAX_SITES && depth < MAX_DEPTH) {
             try {
 
-                // 4a. If the URL has not been crawled yet, add it to the HashSet of links
-                if (links.add(URL)) {
-                    System.out.println(URL);
-                }
-
-                // 2. Fetch HTML code, check language, and write to file
+                // 3. Fetch HTML code, check language
                 Document document = Jsoup.connect(URL).header("Accept-Language", LANGUAGE).get();
-                writeFile(document);
+                Element html = document.select("html").first();
+                String lang = html.attr("lang");
 
-                // 3. Parse the HTML and extract other URLs on the page, then print URL and outlink count to csv
-                Elements linksOnPage = document.select("a[href]");
+                if (lang.equals(LANGUAGE)) {
+                    // 4. If the URL has not been crawled yet, add it to the HashSet of links
+                    if (links.add(URL)) {
+                        System.out.println(URL);
+                    }
 
-                System.out.println("Number of outlinks: " + linksOnPage.size());
-                System.out.println("Depth: " + depth);
-                System.out.println();
+                    // 5. Extract text content and write to file
+                    writeFile(document);
 
-                csvPrinter.printRecord(URL, linksOnPage.size());
-                depth++;
+                    // 6. Parse the HTML and extract other URLs on the page, removing relative URLs
+                    Elements linksOnPage = document.select("a[href]");
+                    Elements relativeLinks = document.select("a[href*=#]");
 
-                // 5. For each URL, go back to step 4
-                for (Element page : linksOnPage) {
-                    getPageLinks(page.attr("abs:href"), depth, csvPrinter);
+                    int absLinksOnPageCount = linksOnPage.size() - relativeLinks.size();
+
+                    HashSet<String> absLinksOnPage = new HashSet<>();
+
+                    for (Element link : linksOnPage) {
+                        if (!relativeLinks.contains(link)) {
+                            String absLink = link.attr("href");
+                            absLinksOnPage.add(absLink);
+                        }
+                    }
+
+                    // 7. Write absolute URL and number of outlinks to report.csv
+                    System.out.println("Number of outlinks: " + absLinksOnPageCount);
+                    System.out.println("Depth: " + depth);
+                    System.out.println();
+
+                    csvPrinter.printRecord(URL, absLinksOnPageCount);
+                    depth++;
+
+                    // 8. For each URL, go back to step 2
+                    for (String absLink : absLinksOnPage) {
+                        getPageLinks(absLink, depth, csvPrinter);
+                    }
+                } else {
+                    System.err.println("For '" + URL + "': \n" + "Site language code: " + lang + "\nSearching for sites with language code: " + LANGUAGE);
+                    System.err.println("This site does not match the desired language.\n");
                 }
             } catch (IOException e) {
                 System.err.println("For '" + URL + "': " + e.getMessage());
@@ -64,6 +95,7 @@ public class WebCrawler {
         }
     }
 
+    // Extracts pure text from html document and writes it to the repository folder
     public void writeFile(Document document) throws IOException {
         String filename = document.title() + ".txt";
         FileWriter fw = new FileWriter(REPOSITORY_FOLDER + "\\" + filename);
@@ -74,18 +106,16 @@ public class WebCrawler {
     public static void main(String[] args) {
 
         try {
-            Path path = Path.of((REPOSITORY_FOLDER));
+            new File(REPOSITORY_FOLDER).mkdir();     // creates repository folder
 
-            new File(String.valueOf(path)).mkdir();     // creates repository folder if it doesn't exist
+            BufferedWriter writer = Files.newBufferedWriter(Paths.get(REPORT_CSV)); // creates csv file
 
-            BufferedWriter writer = Files.newBufferedWriter(Paths.get(REPORT_CSV));
+            CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("URL", "Outlinks")); // creates headers in report.csv
 
-            CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("URL", "Outlinks"));
-
-            // 1. pick a seed URL
+            // 1. Start with the seed URL
             new WebCrawler().getPageLinks(SEED_SITE, 0, csvPrinter);
 
-            csvPrinter.flush();
+            csvPrinter.flush(); // clears buffer
         } catch (IOException e) {
             System.err.println("Cannot write report.csv file");
         }
