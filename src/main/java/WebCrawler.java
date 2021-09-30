@@ -19,10 +19,12 @@ public class WebCrawler {
     // english test seed
     private static final String SEED_SITE = "https://www.cpp.edu";
     private static final String LANGUAGE = "en";
+    private static final String LANGUAGE_ALT = "en-US";
 
     // spanish test seed (need a better one, only 4 crawlable outlinks)
     // private static final String SEED_SITE = "https://www.latimes.com/espanol/eeuu/articulo/2021-09-29/opinion-mexico-es-un-campamento-patio-o-sala-de-espera-de-estados-unidos";
-    // private static final String LANGUAGE = "es-US";
+    // private static final String LANGUAGE = "es";
+    // private static final String LANGUAGE_ALT = "es-US";
 
     // one more language
     // private static final String SEED_SITE = "";
@@ -30,7 +32,7 @@ public class WebCrawler {
 
     private static final String REPORT_CSV = ".\\report.csv";
     private static final String REPOSITORY_FOLDER = ".\\repository";
-    private static final int MAX_SITES = 5;
+    private static final int MAX_SITES = 20;
     private static final int MAX_DEPTH = 2;
     private HashSet<String> links;
 
@@ -49,7 +51,7 @@ public class WebCrawler {
                 Element html = document.select("html").first();
                 String lang = html.attr("lang");
 
-                if (lang.equals(LANGUAGE)) {
+                if (lang.equals(LANGUAGE) || lang.equals(LANGUAGE_ALT)) {
                     // 4. If the URL has not been crawled yet, add it to the HashSet of links
                     if (links.add(URL)) {
                         System.out.println(URL);
@@ -86,7 +88,7 @@ public class WebCrawler {
                         getPageLinks(absLink, depth, csvPrinter);
                     }
                 } else {
-                    System.err.println("For '" + URL + "': \n" + "Site language code: " + lang + "\nSearching for sites with language code: " + LANGUAGE);
+                    System.err.println("For '" + URL + "': \n" + "Site language code: " + lang + "\nSearching for sites with language code: " + LANGUAGE + " or " + LANGUAGE_ALT );
                     System.err.println("This site does not match the desired language.\n");
                 }
             } catch (IOException e) {
@@ -97,7 +99,7 @@ public class WebCrawler {
 
     // Extracts pure text from html document and writes it to the repository folder
     public void writeFile(Document document) throws IOException {
-        String filename = document.title() + ".txt";
+        String filename = "site" + links.size() + ".txt";
         FileWriter fw = new FileWriter(REPOSITORY_FOLDER + "\\" + filename);
         fw.write(document.text());
         fw.close();
