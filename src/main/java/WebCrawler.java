@@ -17,18 +17,20 @@ import java.util.HashSet;
 public class WebCrawler {
 
     // english test seed
-    private static final String SEED_SITE = "https://www.cpp.edu";
-    private static final String LANGUAGE = "en";
-    private static final String LANGUAGE_ALT = "en-US";
+    // private static final String SEED_SITE = "https://www.cpp.edu";
+    // private static final String LANGUAGE = "en";
+    // private static final String LANGUAGE_ALT = "en-US";
 
     // spanish test seed (need a better one, only 4 crawlable outlinks)
-    // private static final String SEED_SITE = "https://www.latimes.com/espanol/eeuu/articulo/2021-09-29/opinion-mexico-es-un-campamento-patio-o-sala-de-espera-de-estados-unidos";
+    // private static final String SEED_SITE = "https://www.canalcocina.es/receta/pancakes-con-salsa-de-chocolate-boom";
+     //private static final String SEED_SITE = "https://www.latimes.com/espanol/eeuu/articulo/2021-09-29/opinion-mexico-es-un-campamento-patio-o-sala-de-espera-de-estados-unidos";
     // private static final String LANGUAGE = "es";
-    // private static final String LANGUAGE_ALT = "es-US";
+    // private static final String LANGUAGE_ALT = "es-ES";
 
-    // one more language
-    // private static final String SEED_SITE = "";
-    // private static final String LANGUAGE = "";
+    // french test seed
+    private static final String SEED_SITE = "https://www.franceculture.fr/";
+    private static final String LANGUAGE = "fr";
+    private static final String LANGUAGE_ALT = "fr-FR";
 
     private static final String REPORT_CSV = ".\\report.csv";
     private static final String REPOSITORY_FOLDER = ".\\repository";
@@ -47,11 +49,12 @@ public class WebCrawler {
             try {
 
                 // 3. Fetch HTML code, check language
-                Document document = Jsoup.connect(URL).header("Accept-Language", LANGUAGE).get();
+                //Document document = Jsoup.connect(URL).header("Accept-Language", LANGUAGE).get();
+                Document document = Jsoup.connect(URL).get();
                 Element html = document.select("html").first();
                 String lang = html.attr("lang");
 
-                if (lang.equals(LANGUAGE) || lang.equals(LANGUAGE_ALT)) {
+                if (lang.equalsIgnoreCase(LANGUAGE) || lang.equalsIgnoreCase(LANGUAGE_ALT)) {
                     // 4. If the URL has not been crawled yet, add it to the HashSet of links
                     if (links.add(URL)) {
                         System.out.println(URL);
@@ -67,12 +70,26 @@ public class WebCrawler {
                     int absLinksOnPageCount = linksOnPage.size() - relativeLinks.size();
 
                     HashSet<String> absLinksOnPage = new HashSet<>();
+                    HashSet<String> updatedAbsLinksOnPage = new HashSet<>();
 
+                    //check if relative
                     for (Element link : linksOnPage) {
                         if (!relativeLinks.contains(link)) {
                             String absLink = link.attr("href");
                             absLinksOnPage.add(absLink);
                         }
+                    }
+
+                    for (String link : absLinksOnPage) {
+                        if (link.startsWith("/") || (link.startsWith("www"))) {
+                            if (link.startsWith("/"))
+                                link = URL + link;
+                            if (link.startsWith("www"))
+                                link = "http://" + link;
+                        } else {
+                            link = SEED_SITE;
+                        }
+                        updatedAbsLinksOnPage.add(link);
                     }
 
                     // 7. Write absolute URL and number of outlinks to report.csv
@@ -84,7 +101,7 @@ public class WebCrawler {
                     depth++;
 
                     // 8. For each URL, go back to step 2
-                    for (String absLink : absLinksOnPage) {
+                    for (String absLink : updatedAbsLinksOnPage) {
                         getPageLinks(absLink, depth, csvPrinter);
                     }
                 } else {
@@ -100,7 +117,7 @@ public class WebCrawler {
     // Extracts pure text from html document and writes it to the repository folder
     public void writeFile(Document document) throws IOException {
         String filename = "site" + links.size() + ".txt";
-        FileWriter fw = new FileWriter(REPOSITORY_FOLDER + "\\" + filename);
+        FileWriter fw = new FileWriter( REPOSITORY_FOLDER + " " + LANGUAGE+ "\\" + filename);
         fw.write(document.text());
         fw.close();
     }
@@ -108,7 +125,7 @@ public class WebCrawler {
     public static void main(String[] args) {
 
         try {
-            new File(REPOSITORY_FOLDER).mkdir();     // creates repository folder
+            new File(REPOSITORY_FOLDER + " " + LANGUAGE).mkdir();     // creates repository folder
 
             BufferedWriter writer = Files.newBufferedWriter(Paths.get(REPORT_CSV)); // creates csv file
 
