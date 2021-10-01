@@ -23,7 +23,7 @@ public class WebCrawler {
 
     // spanish test seed (need a better one, only 4 crawlable outlinks)
     // private static final String SEED_SITE = "https://www.canalcocina.es/receta/pancakes-con-salsa-de-chocolate-boom";
-     //private static final String SEED_SITE = "https://www.latimes.com/espanol/eeuu/articulo/2021-09-29/opinion-mexico-es-un-campamento-patio-o-sala-de-espera-de-estados-unidos";
+    // private static final String SEED_SITE = "https://www.latimes.com/espanol/eeuu/articulo/2021-09-29/opinion-mexico-es-un-campamento-patio-o-sala-de-espera-de-estados-unidos";
     // private static final String LANGUAGE = "es";
     // private static final String LANGUAGE_ALT = "es-ES";
 
@@ -86,8 +86,12 @@ public class WebCrawler {
                                 link = URL + link;
                             if (link.startsWith("www"))
                                 link = "http://" + link;
-                        } else {
-                            link = SEED_SITE;
+                        }
+                        else if(link.startsWith("https://www")){
+
+                        }
+                        else {
+                            link = URL;
                         }
                         updatedAbsLinksOnPage.add(link);
                     }
@@ -117,7 +121,7 @@ public class WebCrawler {
     // Extracts pure text from html document and writes it to the repository folder
     public void writeFile(Document document) throws IOException {
         String filename = "site" + links.size() + ".txt";
-        FileWriter fw = new FileWriter( REPOSITORY_FOLDER + " " + LANGUAGE+ "\\" + filename);
+        FileWriter fw = new FileWriter( REPOSITORY_FOLDER + " " + LANGUAGE + "\\" + filename);
         fw.write(document.text());
         fw.close();
     }
