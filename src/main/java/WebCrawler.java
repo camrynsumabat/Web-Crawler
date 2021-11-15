@@ -21,7 +21,7 @@ public class WebCrawler {
     private static final String SEED_SITE = "https://www.cpp.edu";
     private static final String DOMAIN = "cpp.edu";
     private static final int MAX_SITE = 50;
-    private static final String REPORT_CSV = ".\\outlinks-report.csv";
+    private static final String REPORT_CSV = ".\\report.csv";
     private HashSet<String> links;
     HashMap inlinks = new HashMap();
 
@@ -84,7 +84,7 @@ public class WebCrawler {
                     System.out.println("Depth: " + depth);
                     System.out.println();
 
-                    csvPrinter.printRecord(URL, absLinksOnPageCount);
+                    csvPrinter.printRecord(URL, absLinksOnPageCount, inlinks.get(URL));
                     depth++;
 
                     // For each URL, recurse
@@ -117,13 +117,13 @@ public class WebCrawler {
 
             BufferedWriter writer = Files.newBufferedWriter(Paths.get(REPORT_CSV)); // creates csv file
 
-            CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("URL", "Outlinks")); // creates headers in report.csv
+            CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("URL", "Outlinks", "Inlinks")); // creates headers in report.csv
 
             new WebCrawler().getPageLinks(SEED_SITE, 0, csvPrinter);
 
             csvPrinter.flush(); // clears buffer
         } catch (IOException e) {
-            System.err.println("Cannot write outlinks-report.csv file");
+            System.err.println("Cannot write report.csv file");
         }
 
     }
