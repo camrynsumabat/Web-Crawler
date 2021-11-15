@@ -19,7 +19,7 @@ public class WebCrawler {
     // english test seed
     private static final String SEED_SITE = "https://www.cpp.edu";
     private static final String DOMAIN = "cpp.edu";
-    private static final int MAX_SITE = 5;
+    private static final int MAX_SITE = 50;
     private static final String REPORT_CSV = ".\\outlinks-report.csv";
     private HashSet<String> links;
 
@@ -58,7 +58,7 @@ public class WebCrawler {
                     for (String link : absLinksOnPage) {
                         if (link.startsWith("/") || (link.startsWith("www"))) {
                             if (link.startsWith("/"))
-                                link = URL + link;
+                                link = SEED_SITE + link;
                             if (link.startsWith("www"))
                                 link = "http://" + link;
                         }
