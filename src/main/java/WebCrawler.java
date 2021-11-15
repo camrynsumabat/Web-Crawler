@@ -17,25 +17,10 @@ import java.util.HashSet;
 public class WebCrawler {
 
     // english test seed
-    // private static final String SEED_SITE = "https://www.cpp.edu";
-    // private static final String LANGUAGE = "en";
-    // private static final String LANGUAGE_ALT = "en-US";
-
-    // spanish test seed (need a better one, only 4 crawlable outlinks)
-    // private static final String SEED_SITE = "https://www.canalcocina.es/receta/pancakes-con-salsa-de-chocolate-boom";
-    // private static final String SEED_SITE = "https://www.latimes.com/espanol/eeuu/articulo/2021-09-29/opinion-mexico-es-un-campamento-patio-o-sala-de-espera-de-estados-unidos";
-    // private static final String LANGUAGE = "es";
-    // private static final String LANGUAGE_ALT = "es-ES";
-
-    // french test seed
-    private static final String SEED_SITE = "https://www.franceculture.fr/";
-    private static final String LANGUAGE = "fr";
-    private static final String LANGUAGE_ALT = "fr-FR";
-
-    private static final String REPORT_CSV = ".\\report.csv";
-    private static final String REPOSITORY_FOLDER = ".\\repository";
-    private static final int MAX_SITES = 20;
-    private static final int MAX_DEPTH = 2;
+    private static final String SEED_SITE = "https://www.cpp.edu";
+    private static final String DOMAIN = "cpp.edu";
+    private static final int MAX_SITE = 50;
+    private static final String REPORT_CSV = ".\\outlinks-report.csv";
     private HashSet<String> links;
 
     public WebCrawler() {
@@ -44,26 +29,16 @@ public class WebCrawler {
 
     public void getPageLinks(String URL, int depth, CSVPrinter csvPrinter) {
 
-        // 2. Check that the URL has not been crawled yet and the page limit and depth has not been reached
-        if (!links.contains(URL) && links.size() < MAX_SITES && depth < MAX_DEPTH) {
+        if (!links.contains(URL) && links.size() < MAX_SITE) {
             try {
-
-                // 3. Fetch HTML code, check language
-                //Document document = Jsoup.connect(URL).header("Accept-Language", LANGUAGE).get();
                 Document document = Jsoup.connect(URL).get();
-                Element html = document.select("html").first();
-                String lang = html.attr("lang");
 
-                if (lang.equalsIgnoreCase(LANGUAGE) || lang.equalsIgnoreCase(LANGUAGE_ALT)) {
-                    // 4. If the URL has not been crawled yet, add it to the HashSet of links
+                // restrict domain
+                if(URL.contains(DOMAIN)) {
                     if (links.add(URL)) {
                         System.out.println(URL);
                     }
 
-                    // 5. Extract text content and write to file
-                    writeFile(document);
-
-                    // 6. Parse the HTML and extract other URLs on the page, removing relative URLs
                     Elements linksOnPage = document.select("a[href]");
                     Elements relativeLinks = document.select("a[href*=#]");
 
@@ -83,7 +58,7 @@ public class WebCrawler {
                     for (String link : absLinksOnPage) {
                         if (link.startsWith("/") || (link.startsWith("www"))) {
                             if (link.startsWith("/"))
-                                link = URL + link;
+                                link = SEED_SITE + link;
                             if (link.startsWith("www"))
                                 link = "http://" + link;
                         }
@@ -96,7 +71,6 @@ public class WebCrawler {
                         updatedAbsLinksOnPage.add(link);
                     }
 
-                    // 7. Write absolute URL and number of outlinks to report.csv
                     System.out.println("Number of outlinks: " + absLinksOnPageCount);
                     System.out.println("Depth: " + depth);
                     System.out.println();
@@ -104,13 +78,12 @@ public class WebCrawler {
                     csvPrinter.printRecord(URL, absLinksOnPageCount);
                     depth++;
 
-                    // 8. For each URL, go back to step 2
+                    // For each URL, recurse
                     for (String absLink : updatedAbsLinksOnPage) {
                         getPageLinks(absLink, depth, csvPrinter);
                     }
                 } else {
-                    System.err.println("For '" + URL + "': \n" + "Site language code: " + lang + "\nSearching for sites with language code: " + LANGUAGE + " or " + LANGUAGE_ALT );
-                    System.err.println("This site does not match the desired language.\n");
+                    System.err.println("Issue crawling " + URL + ": Not in the domain restriction for " + DOMAIN);
                 }
             } catch (IOException e) {
                 System.err.println("For '" + URL + "': " + e.getMessage());
@@ -118,6 +91,7 @@ public class WebCrawler {
         }
     }
 
+    /*
     // Extracts pure text from html document and writes it to the repository folder
     public void writeFile(Document document) throws IOException {
         String filename = "site" + links.size() + ".txt";
@@ -125,22 +99,22 @@ public class WebCrawler {
         fw.write(document.text());
         fw.close();
     }
+     */
 
     public static void main(String[] args) {
 
         try {
-            new File(REPOSITORY_FOLDER + " " + LANGUAGE).mkdir();     // creates repository folder
+            // new File(REPOSITORY_FOLDER + " " + LANGUAGE).mkdir();     // creates repository folder
 
             BufferedWriter writer = Files.newBufferedWriter(Paths.get(REPORT_CSV)); // creates csv file
 
             CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("URL", "Outlinks")); // creates headers in report.csv
 
-            // 1. Start with the seed URL
             new WebCrawler().getPageLinks(SEED_SITE, 0, csvPrinter);
 
             csvPrinter.flush(); // clears buffer
         } catch (IOException e) {
-            System.err.println("Cannot write report.csv file");
+            System.err.println("Cannot write outlinks-report.csv file");
         }
 
     }
