@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.HashSet;
 
 public class WebCrawler {
@@ -22,13 +23,15 @@ public class WebCrawler {
     private static final int MAX_SITE = 50;
     private static final String REPORT_CSV = ".\\outlinks-report.csv";
     private HashSet<String> links;
+    HashMap inlinks = new HashMap();
+
 
     public WebCrawler() {
         links = new HashSet<String>();
     }
 
     public void getPageLinks(String URL, int depth, CSVPrinter csvPrinter) {
-
+        int inlinksCount = 0;
         if (!links.contains(URL) && links.size() < MAX_SITE) {
             try {
                 Document document = Jsoup.connect(URL).get();
@@ -43,6 +46,7 @@ public class WebCrawler {
                     Elements relativeLinks = document.select("a[href*=#]");
 
                     int absLinksOnPageCount = linksOnPage.size() - relativeLinks.size();
+
 
                     HashSet<String> absLinksOnPage = new HashSet<>();
                     HashSet<String> updatedAbsLinksOnPage = new HashSet<>();
@@ -61,6 +65,7 @@ public class WebCrawler {
                                 link = SEED_SITE + link;
                             if (link.startsWith("www"))
                                 link = "http://" + link;
+
                         }
                         else if(link.startsWith("https://www")){
 
@@ -69,9 +74,13 @@ public class WebCrawler {
                             link = URL;
                         }
                         updatedAbsLinksOnPage.add(link);
+                        inlinksCount++;
+                        inlinks.put(link,inlinksCount);
                     }
 
+
                     System.out.println("Number of outlinks: " + absLinksOnPageCount);
+                    System.out.println("Number of inlinks: " + inlinks.get(URL));
                     System.out.println("Depth: " + depth);
                     System.out.println();
 
