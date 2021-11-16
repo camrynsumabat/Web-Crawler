@@ -50,7 +50,6 @@ public class WebCrawler {
 
                     int absLinksOnPageCount = linksOnPage.size() - relativeLinks.size();
 
-
                     HashSet<String> absLinksOnPage = new HashSet<>();
                     HashSet<String> updatedAbsLinksOnPage = new HashSet<>();
 
@@ -78,7 +77,18 @@ public class WebCrawler {
                         }
                         updatedAbsLinksOnPage.add(link);
 
-                        //inlinks path
+                        // inlinks path
+                        ArrayList<String> inlinks;
+                        if (!inlinksPath.containsKey(link)) {
+                            inlinks = new ArrayList<>();
+                        } else {
+                            inlinks = inlinksPath.get(link);
+                        }
+                        inlinks.add(URL);
+                        inlinksPath.put(link, inlinks);
+
+                        //inlinks path (original)
+                        /*
                         if(currInlinkList.size() == 0 || currInlinkList == null){
                             currInlinkList.add(link);
                             inlinksPath.put(link,currInlinkList);
@@ -89,6 +99,7 @@ public class WebCrawler {
                                 inlinksPath.replace(link,currInlinkList);
                             }
                         }
+                        */
 
                         //inlinks count
                         if(inlinksCount.get(link) == null){
@@ -105,11 +116,11 @@ public class WebCrawler {
                     System.out.println("Number of outlinks: " + absLinksOnPageCount);
                     System.out.println("Number of inlinks: " + inlinksCount.get(URL));
                     System.out.println("Inlinks Source: " + inlinksPath.get(URL));
-                    System.out.println("Inlinks array size: " + currInlinkList.size());
+                    System.out.println("Inlinks array size: " + inlinksPath.get(URL).size());
                     System.out.println("Depth: " + depth);
                     System.out.println("------------------------------------");
 
-                    csvPrinter.printRecord(URL, absLinksOnPageCount, inlinks.get(URL));
+                    csvPrinter.printRecord(URL, absLinksOnPageCount/*, inlinks.get(URL)*/);
                     depth++;
 
                     // For each URL, recurse
@@ -142,7 +153,7 @@ public class WebCrawler {
 
             BufferedWriter writer = Files.newBufferedWriter(Paths.get(REPORT_CSV)); // creates csv file
 
-            CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("URL", "Outlinks", "Inlinks")); // creates headers in report.csv
+            CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("URL", "Outlinks"/*, "Inlinks"*/)); // creates headers in report.csv
 
             new WebCrawler().getPageLinks(SEED_SITE, 0, csvPrinter);
 
