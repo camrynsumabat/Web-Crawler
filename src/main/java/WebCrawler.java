@@ -33,7 +33,6 @@ public class WebCrawler {
     }
 
     public void getPageLinks(String URL, int depth, CSVPrinter csvPrinter) {
-        ArrayList currInlinkList = new ArrayList<String>();
 
         if (!links.contains(URL) && links.size() < MAX_SITE) {
             try {
@@ -84,22 +83,10 @@ public class WebCrawler {
                         } else {
                             inlinks = inlinksPath.get(link);
                         }
-                        inlinks.add(URL);
+                        if (!inlinks.contains(URL)) {
+                            inlinks.add(URL);
+                        }
                         inlinksPath.put(link, inlinks);
-
-                        //inlinks path (original)
-                        /*
-                        if(currInlinkList.size() == 0 || currInlinkList == null){
-                            currInlinkList.add(link);
-                            inlinksPath.put(link,currInlinkList);
-                        }
-                        else{
-                            if(!currInlinkList.contains(link)) {
-                                currInlinkList.add(link);
-                                inlinksPath.replace(link,currInlinkList);
-                            }
-                        }
-                        */
 
                         //inlinks count
                         if(inlinksCount.get(link) == null){
@@ -136,20 +123,9 @@ public class WebCrawler {
         }
     }
 
-    /*
-    // Extracts pure text from html document and writes it to the repository folder
-    public void writeFile(Document document) throws IOException {
-        String filename = "site" + links.size() + ".txt";
-        FileWriter fw = new FileWriter( REPOSITORY_FOLDER + " " + LANGUAGE + "\\" + filename);
-        fw.write(document.text());
-        fw.close();
-    }
-     */
-
     public static void main(String[] args) {
 
         try {
-            // new File(REPOSITORY_FOLDER + " " + LANGUAGE).mkdir();     // creates repository folder
 
             BufferedWriter writer = Files.newBufferedWriter(Paths.get(REPORT_CSV)); // creates csv file
 
