@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
@@ -23,7 +24,8 @@ public class WebCrawler {
     private static final int MAX_SITE = 50;
     private static final String REPORT_CSV = ".\\report.csv";
     private HashSet<String> links;
-    HashMap inlinks = new HashMap();
+    HashMap<String, Integer> inlinksCount = new HashMap();
+    HashMap<String, ArrayList<String>> inlinksPath = new HashMap<>();
 
 
     public WebCrawler() {
@@ -31,7 +33,8 @@ public class WebCrawler {
     }
 
     public void getPageLinks(String URL, int depth, CSVPrinter csvPrinter) {
-        int inlinksCount = 0;
+        ArrayList currInlinkList = new ArrayList<String>();
+
         if (!links.contains(URL) && links.size() < MAX_SITE) {
             try {
                 Document document = Jsoup.connect(URL).get();
@@ -74,15 +77,37 @@ public class WebCrawler {
                             link = URL;
                         }
                         updatedAbsLinksOnPage.add(link);
-                        inlinksCount++;
-                        inlinks.put(link,inlinksCount);
+
+                        //inlinks path
+                        if(currInlinkList.size() == 0 || currInlinkList == null){
+                            currInlinkList.add(link);
+                            inlinksPath.put(link,currInlinkList);
+                        }
+                        else{
+                            if(!currInlinkList.contains(link)) {
+                                currInlinkList.add(link);
+                                inlinksPath.replace(link,currInlinkList);
+                            }
+                        }
+
+                        //inlinks count
+                        if(inlinksCount.get(link) == null){
+                            inlinksCount.put(link,1);
+                        }
+                        else{
+                            int inlinksHelper = inlinksCount.get(link);
+                            inlinksCount.put(link,inlinksHelper+1);
+                        }
+                        System.out.println(URL + " -> " + link); //print the urls are being crawled (from -> to)
                     }
 
 
                     System.out.println("Number of outlinks: " + absLinksOnPageCount);
-                    System.out.println("Number of inlinks: " + inlinks.get(URL));
+                    System.out.println("Number of inlinks: " + inlinksCount.get(URL));
+                    System.out.println("Inlinks Source: " + inlinksPath.get(URL));
+                    System.out.println("Inlinks array size: " + currInlinkList.size());
                     System.out.println("Depth: " + depth);
-                    System.out.println();
+                    System.out.println("------------------------------------");
 
                     csvPrinter.printRecord(URL, absLinksOnPageCount, inlinks.get(URL));
                     depth++;
