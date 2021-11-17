@@ -96,7 +96,7 @@ public class WebCrawler {
                             int inlinksHelper = inlinksCount.get(link);
                             inlinksCount.put(link,inlinksHelper+1);
                         }
-                        System.out.println(URL + " -> " + link); //print the urls are being crawled (from -> to)
+                        // System.out.println(URL + " -> " + link); //print the urls are being crawled (from -> to)
                     }
 
 
@@ -107,7 +107,7 @@ public class WebCrawler {
                     System.out.println("Depth: " + depth);
                     System.out.println("------------------------------------");
 
-                    csvPrinter.printRecord(URL, absLinksOnPageCount/*, inlinks.get(URL)*/);
+                    csvPrinter.printRecord(URL, absLinksOnPageCount, inlinksCount.get(URL), inlinksPath.get(URL));
                     depth++;
 
                     // For each URL, recurse
@@ -129,7 +129,7 @@ public class WebCrawler {
 
             BufferedWriter writer = Files.newBufferedWriter(Paths.get(REPORT_CSV)); // creates csv file
 
-            CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("URL", "Outlinks"/*, "Inlinks"*/)); // creates headers in report.csv
+            CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.withHeader("URL", "Outlinks", "Inlinks", "List of Inlinks")); // creates headers in report.csv
 
             new WebCrawler().getPageLinks(SEED_SITE, 0, csvPrinter);
 
