@@ -18,9 +18,11 @@ import java.util.HashSet;
 
 public class WebCrawler {
 
-    // english test seed
-    private static final String SEED_SITE = "https://www.cpp.edu";
-    private static final String DOMAIN = "cpp.edu";
+    // private static final String SEED_SITE = "https://www.cpp.edu";
+    // private static final String DOMAIN = "cpp.edu";
+    private static final String SEED_SITE = "https://en.wikipedia.org/";
+    private static final String DOMAIN = "en.wikipedia.org";
+
     private static final int MAX_SITE = 50;
     private static final String REPORT_CSV = ".\\report.csv";
     private HashSet<String> links;
@@ -87,27 +89,16 @@ public class WebCrawler {
                             inlinks.add(URL);
                         }
                         inlinksPath.put(link, inlinks);
-
-                        //inlinks count
-                        if(inlinksCount.get(link) == null){
-                            inlinksCount.put(link,1);
-                        }
-                        else{
-                            int inlinksHelper = inlinksCount.get(link);
-                            inlinksCount.put(link,inlinksHelper+1);
-                        }
-                        // System.out.println(URL + " -> " + link); //print the urls are being crawled (from -> to)
                     }
 
 
                     System.out.println("Number of outlinks: " + absLinksOnPageCount);
-                    System.out.println("Number of inlinks: " + inlinksCount.get(URL));
                     System.out.println("Inlinks Source: " + inlinksPath.get(URL));
                     System.out.println("Inlinks array size: " + inlinksPath.get(URL).size());
                     System.out.println("Depth: " + depth);
                     System.out.println("------------------------------------");
 
-                    csvPrinter.printRecord(URL, absLinksOnPageCount, inlinksCount.get(URL), inlinksPath.get(URL));
+                    csvPrinter.printRecord(URL, absLinksOnPageCount, inlinksPath.get(URL).size(), inlinksPath.get(URL));
                     depth++;
 
                     // For each URL, recurse
